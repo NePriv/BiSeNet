@@ -47,8 +47,8 @@ def get_func(inpth, in_q, done):
     fps = cap.get(cv2.CAP_PROP_FPS)
 
     to_tensor = T.ToTensor(
-        mean=(0.3257, 0.3690, 0.3223), # city, rgb
-        std=(0.2112, 0.2148, 0.2115),
+        mean=(0.414521723985672, 0.4492538869380951, 0.3439224064350128), # city, rgb
+        std=(0.2068883776664734, 0.19211505353450775, 0.207492396235466),
     )
 
     while cap.isOpened():

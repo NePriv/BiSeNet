@@ -123,3 +123,8 @@ tis/cpp_client/build/*
 log*txt
 
 tvm/
+
+.idea/
+datasets/
+datasets/anno.txt
+res_cycle/

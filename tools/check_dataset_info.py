@@ -38,6 +38,9 @@ max_lb_val, min_lb_val = -1, 10000000
 for impth, lbpth in tqdm(zip(impaths, lbpaths), total=n_pairs):
     im = cv2.imread(impth)[:, :, ::-1]
     lb = cv2.imread(lbpth, 0)
+    # if im.shape[:2] != lb.shape:  # 缩放原图
+    #     # print(f"Adjusting shapes: Image shape {im.shape[:2]}, Label shape {lb.shape}")
+    #     im = cv2.resize(im, (lb.shape[1], lb.shape[0]))
     assert im.shape[:2] == lb.shape
 
     shape = lb.shape
