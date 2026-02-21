@@ -10,17 +10,32 @@ import torch.distributed as dist
 
 
 def setup_logger(name, logpth):
-    logfile = '{}-{}.log'.format(name, time.strftime('%Y-%m-%d-%H-%M-%S'))
-    logfile = osp.join(logpth, logfile)
-    FORMAT = '%(levelname)s %(filename)s(%(lineno)d): %(message)s'
-    log_level = logging.INFO
-    if dist.is_initialized() and dist.get_rank() != 0:
-        log_level = logging.WARNING
+    rank = dist.get_rank() if dist.is_initialized() else 0
+    multi_gpu = dist.is_initialized() and dist.get_world_size() > 1
+    rank_prefix = 'rank{} '.format(rank) if multi_gpu else ''
+    FORMAT = '{}%(levelname)s %(filename)s(%(lineno)d): %(message)s'.format(rank_prefix)
+
+    if multi_gpu:
+        obj_list = ['{}-{}.log'.format(name, time.strftime('%Y-%m-%d-%H-%M-%S'))
+                    if rank == 0 else None]
+        dist.broadcast_object_list(obj_list, src=0)
+        logfile = osp.join(logpth, obj_list[0])
+    else:
+        logfile = osp.join(logpth, '{}-{}.log'.format(name, time.strftime('%Y-%m-%d-%H-%M-%S')))
+
+    if dist.is_initialized() and rank != 0:
+        fh = logging.FileHandler(logfile)
+        fh.setLevel(logging.WARNING)
+        fh.setFormatter(logging.Formatter(FORMAT))
+        logging.root.setLevel(logging.WARNING)
+        logging.root.addHandler(fh)
+        return
+
     try:
-        logging.basicConfig(level=log_level, format=FORMAT, filename=logfile, force=True)
+        logging.basicConfig(level=logging.INFO, format=FORMAT, filename=logfile, force=True)
     except Exception:
         for hl in logging.root.handlers: logging.root.removeHandler(hl)
-        logging.basicConfig(level=log_level, format=FORMAT, filename=logfile)
+        logging.basicConfig(level=logging.INFO, format=FORMAT, filename=logfile)
     logging.root.addHandler(logging.StreamHandler())
 
 
